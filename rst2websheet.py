@@ -21,6 +21,11 @@ class Writer(docutils.writers.html5_polyglot.Writer):
 
 class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
 
+    head_prefix_template = ('<html lang="%(lang)s">\n<head>\n')
+    content_type = ('<meta charset="%s">\n')
+    generator = ('<meta name="generator" content="rst2websheets '
+                 'based on docutils %s">\n')
+
     def stylesheet_call(self, path):
         """Return code to reference stylesheet file `path`"""
 
