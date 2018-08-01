@@ -3,15 +3,15 @@ import docutils.core
 import docutils.parsers.rst
 import docutils.writers.html5_polyglot
 
-import sys
-import os.path
-import re
-import urllib
+# import sys
+# import os.path
+# import re
+# import urllib
 
-import docutils
+# import docutils
 from docutils import nodes, utils, writers, languages, io
-from docutils.utils.error_reporting import SafeString
-from docutils.transforms import writer_aux
+# from docutils.utils.error_reporting import SafeString
+# from docutils.transforms import writer_aux
 
 class Writer(docutils.writers.html5_polyglot.Writer):
 
@@ -45,6 +45,13 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_section(self, node):
         self.section_level -= 1
         self.body.append('</section>\n')
+
+    def visit_container(self, node):
+        self.body.append(self.starttag(node, 'div', CLASS='container'))
+
+    def depart_container(self, node):
+        self.body.append('</div>\n')
+
 
 
 public = docutils.core.publish_file(
