@@ -68,7 +68,13 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
         if 'ids' in atts:
             ids.extend(atts['ids'])
             del atts['ids']
-        if ids:
+
+        # Removed if statement
+        # if ids:
+        # We don't want id's in the tags, we don't plan to format specific
+        # elements using CSS
+        # TODO: have a setting that specifies whether or not id's will be used.
+        if False:
             atts['id'] = ids[0]
             for id in ids[1:]:
                 # Add empty "span" elements for additional IDs.  Note
