@@ -141,6 +141,43 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_container(self, node):
         self.body.append('</div>\n')
 
+    def visit_transition(self, node):
+        self.body.append(self.emptytag(node, 'hr'))
+
+    def depart_transition(self, node):
+        pass
+
+    # inline literal
+    def visit_literal(self, node):
+        # special case: "code" role
+        classes = node.get('classes', [])
+        if 'code' in classes:
+            # filter 'code' from class arguments
+            node['classes'] = [cls for cls in classes if cls != 'code']
+            self.body.append(self.starttag(node, 'code', ''))
+            return
+        self.body.append(
+            self.starttag(node, 'span', '', CLASS='literal'))
+        text = node.astext()
+        # remove hard line breaks (except if in a parsed-literal block)
+        if not isinstance(node.parent, nodes.literal_block):
+            text = text.replace('\n', ' ')
+        # Protect text like ``--an-option`` and the regular expression
+        # ``[+]?(\d+(\.\d*)?|\.\d+)`` from bad line wrapping
+        for token in self.words_and_spaces.findall(text):
+            if token.strip() and self.in_word_wrap_point.search(token):
+                self.body.append('<span class="pre">%s</span>'
+                                    % self.encode(token))
+            else:
+                self.body.append(self.encode(token))
+        self.body.append('</span>')
+        # Content already processed:
+        raise nodes.SkipNode
+
+    def depart_literal(self, node):
+        # skipped unless literal element is from "code" role:
+        self.body.append('</code>')
+
 
 
 public = docutils.core.publish_file(
