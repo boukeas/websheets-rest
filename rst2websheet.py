@@ -147,6 +147,12 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_transition(self, node):
         pass
 
+    def visit_sidebar(self, node):
+        self.body.append(self.starttag(node, 'aside'))
+
+    def depart_sidebar(self, node):
+        self.body.append('</aside>\n')
+
     # inline literal
     def visit_literal(self, node):
         # special case: "code" role
