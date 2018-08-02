@@ -28,6 +28,7 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     content_type = ('<meta charset="%s">\n')
     generator = ('<meta name="generator" content="rst2websheets '
                  'based on docutils %s">\n')
+    stylesheet_link = '<link rel="stylesheet" href="%s" type="text/css">\n'
 
     def stylesheet_call(self, path):
         """Return code to reference stylesheet file `path`"""
@@ -87,7 +88,7 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
                     # *inside* the element, as the first child.
                     suffix += '<span id="%s"></span>' % id
 
-        # sorted used instead of attlist.sort()
+        # sorted used instead of original attlist.sort()
         attlist = sorted(atts.items())
         parts = [tagname]
         for name, value in attlist:
@@ -102,12 +103,15 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
                 parts.append('%s="%s"' % (name.lower(),
                                           self.attval(unicode(value))))
 
-        if empty:
-            infix = ' /'
-        else:
-            infix = ''
+        # empty tags need a closing / to be XHTML compatible
+        # HTML5 does not require this, so I am removing the if statement
+        # if empty:
+        #     infix = ' /'
+        # else:
+        #     infix = ''
+        # return ''.join(prefix) + '<%s%s>' % (' '.join(parts), infix) + suffix
 
-        return ''.join(prefix) + '<%s%s>' % (' '.join(parts), infix) + suffix
+        return ''.join(prefix) + '<%s>' % ' '.join(parts) + suffix
 
     def visit_section(self, node):
         self.section_level += 1
