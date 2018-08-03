@@ -22,6 +22,14 @@ class Writer(docutils.writers.html5_polyglot.Writer):
         self.parts = {}
         self.translator_class = WebsheetHTMLTranslator
 
+    """
+    # use this if you want to check settings and overrides
+    def translate(self):
+        print(self.document.settings)
+        exit()
+    """
+
+
 class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
 
     head_prefix_template = ('<html lang="%(lang)s">\n<head>\n')
@@ -29,15 +37,6 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     generator = ('<meta name="generator" content="rst2websheets '
                  'based on docutils %s">\n')
     stylesheet_link = '<link rel="stylesheet" href="%s" type="text/css">\n'
-
-    def stylesheet_call(self, path):
-        """Return code to reference stylesheet file `path`"""
-
-        # link to style file:
-        if self.settings.stylesheet_path:
-            # adapt path relative to output (cf. config.html#stylesheet-path)
-            path = utils.relative_path(self.settings._destination, path)
-        return self.stylesheet_link % self.encode(path)
 
     def starttag(self, node, tagname, suffix='\n', empty=False, **attributes):
         """
@@ -188,23 +187,11 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
 
 public = docutils.core.publish_file(
             source=open("answer.rst", 'r'),
+            # parser=docutils.parsers.rst.Parser(),
+            # writer=docutils.writers.html5_polyglot.Writer())
             writer=Writer(),
             settings_overrides={
-                #'generator': 'a generator',
-                #'language-code': 'el',
-                'embed-stylesheet': False,
+                'language_code': 'el',
+                'embed_stylesheet': False,
                 'initial_header_level': 2
             })
-
-'''
-public = docutils.core.publish_file(
-            source=open("answer.rst", 'r'),
-            parser=docutils.parsers.rst.Parser(),
-            writer=docutils.writers.html5_polyglot.Writer(),
-            settings_overrides={
-                'generator': 'a generator',
-                'language-code': 'el',
-                'initial_header_level': 2,
-                'embed-stylesheet': 0
-            })
-'''
