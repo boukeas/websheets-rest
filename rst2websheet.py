@@ -183,7 +183,14 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
         # skipped unless literal element is from "code" role:
         self.body.append('</code>')
 
-
+# language is now hard-coded to greek
+# eventually it will be determined otherwise
+language_tag = 'el'
+# imports should eventually use try-except ImportError,
+# like in docutils.languages.get_language
+from languages import el
+output_language_module = el
+docutils.languages._languages[language_tag] = output_language_module
 
 public = docutils.core.publish_file(
             source=open("answer.rst", 'r'),
@@ -191,7 +198,7 @@ public = docutils.core.publish_file(
             # writer=docutils.writers.html5_polyglot.Writer())
             writer=Writer(),
             settings_overrides={
-                'language_code': 'el',
+                'language_code': language_tag,
                 'embed_stylesheet': False,
                 'initial_header_level': 2
             })
