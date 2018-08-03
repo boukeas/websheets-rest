@@ -3,15 +3,8 @@ import docutils.core
 import docutils.parsers.rst
 import docutils.writers.html5_polyglot
 
-# import sys
-# import os.path
-# import re
-# import urllib
-
-# import docutils
-from docutils import nodes, utils, writers, languages, io
-# from docutils.utils.error_reporting import SafeString
-# from docutils.transforms import writer_aux
+from docutils import nodes, utils, writers, languages, io, transforms
+from docutils import Component
 
 def unicode(v):
     return v
@@ -183,6 +176,23 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
         # skipped unless literal element is from "code" role:
         self.body.append('</code>')
 
+
+class Test_Transform(docutils.transforms.Transform):
+
+    default_priority = 990
+
+    def apply(self):
+        self.document.reporter.warning('Applying the test transform!')
+
+class Parser(docutils.parsers.rst.Parser):
+
+    # You don't exactly add a Transform to a Component,
+    # you need to arrange for the get_transforms method of the Component
+    # to return the transforms you want
+
+    def get_transforms(self):
+        return super().get_transforms() + [Test_Transform]
+
 # language is now hard-coded to greek
 # eventually it will be determined otherwise
 language_tag = 'el'
@@ -192,9 +202,10 @@ from languages import el
 output_language_module = el
 docutils.languages._languages[language_tag] = output_language_module
 
+
 public = docutils.core.publish_file(
             source=open("answer.rst", 'r'),
-            # parser=docutils.parsers.rst.Parser(),
+            parser=Parser(),
             # writer=docutils.writers.html5_polyglot.Writer())
             writer=Writer(),
             settings_overrides={
