@@ -1,5 +1,6 @@
-# $Id: en.py 4564 2006-05-21 20:44:42Z wiemann $
-# Author: David Goodger <goodger@python.org>
+# -*- coding: utf-8 -*-
+# $Id: el.py boukeas $
+# Author: George Boukeas <boukeas@gmail.com>
 # Copyright: This module has been placed in the public domain.
 
 # New language mappings are welcome.  Before doing a new translation, please
@@ -15,46 +16,46 @@ __docformat__ = 'reStructuredText'
 
 labels = {
       # fixed: language-dependent
-      'author': 'Author',
-      'authors': 'Authors',
-      'organization': 'Organization',
-      'address': 'Address',
-      'contact': 'Contact',
-      'version': 'Version',
-      'revision': 'Revision',
-      'status': 'Status',
-      'date': 'Date',
-      'copyright': 'Copyright',
-      'dedication': 'Dedication',
-      'abstract': 'Abstract',
-      'attention': 'Attention!',
-      'caution': 'Caution!',
-      'danger': '!DANGER!',
-      'error': 'Error',
+      'author': 'Συγγραφέας',
+      'authors': 'Συγγραφείς',
+      'organization': 'Οργανισμός',
+      'address': 'Διεύθυνση',
+      'contact': 'Επικοινωνία',
+      'version': 'Έκδοση',
+      'revision': 'Αναθεώρηση',
+      'status': 'Κατάσταση',
+      'date': 'Ημερομηνία',
+      'copyright': 'Πνευματικά Δικαιώματα',
+      'dedication': 'Αφιέρωση',
+      'abstract': 'Περίληψη',
+      'attention': 'Προσοχή!',
+      'caution': 'Προειδοποίηση!',
+      'danger': '!ΚΙΝΔΥΝΟΣ!',
+      'error': 'Σφάλμα',
       'hint': 'Υπόδειξη',
-      'important': 'Important',
-      'note': 'Note',
-      'tip': 'Tip',
-      'warning': 'Warning',
-      'contents': 'Contents'}
+      'important': 'Σημαντικό',
+      'note': 'Σημείωση',
+      'tip': 'Συμβουλή',
+      'warning': 'Προειδοποίηση',
+      'contents': 'Περιεχόμενα'}
 """Mapping of node class name to label text."""
 
 bibliographic_fields = {
       # language-dependent: fixed
-      'author': 'author',
-      'authors': 'authors',
-      'organization': 'organization',
-      'address': 'address',
-      'contact': 'contact',
-      'version': 'version',
-      'revision': 'revision',
-      'status': 'status',
-      'date': 'date',
-      'copyright': 'copyright',
-      'dedication': 'dedication',
-      'abstract': 'abstract'}
+      'author': 'συγγραφέας',
+      'authors': 'συγγραφείς',
+      'organization': 'οργανισμός',
+      'address': 'διεύθυνση',
+      'contact': 'επικοινωνία',
+      'version': 'έκδοση',
+      'revision': 'αναθεώρηση',
+      'status': 'κατάσταση',
+      'date': 'ημερομηνία',
+      'copyright': 'πνευματικά δικαιώματα',
+      'dedication': 'αφιέρωση',
+      'abstract': 'περίληψη'}
 """English (lowcased) to canonical name mapping for bibliographic fields."""
 
-author_separators = [';', ',']
+author_separators = [',', '·']
 """List of separator strings for the 'Authors' bibliographic field. Tried in
 order."""
