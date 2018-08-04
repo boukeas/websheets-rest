@@ -177,12 +177,28 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
         self.body.append('</code>')
 
 
-class Test_Transform(docutils.transforms.Transform):
+class Test(docutils.transforms.Transform):
 
-    default_priority = 990
+    default_priority = 900
 
     def apply(self):
         self.document.reporter.warning('Applying the test transform!')
+
+class Title(docutils.transforms.Transform):
+
+    default_priority = 999
+
+    def is_title(self, node):
+        return isinstance(node, nodes.title)
+
+    def apply(self):
+        self.document.reporter.warning('Applying the title transform!')
+        for node in self.document.traverse(self.is_title):
+            pass
+            # node.parent['title'] = 'this is followed by a title'
+            # node.parent.remove(node)
+
+
 
 class Parser(docutils.parsers.rst.Parser):
 
@@ -191,7 +207,7 @@ class Parser(docutils.parsers.rst.Parser):
     # to return the transforms you want
 
     def get_transforms(self):
-        return super().get_transforms() + [Test_Transform]
+        return super().get_transforms() + [Test, Title]
 
 # language is now hard-coded to greek
 # eventually it will be determined otherwise
