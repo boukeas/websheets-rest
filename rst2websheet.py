@@ -198,7 +198,70 @@ class Title(docutils.transforms.Transform):
             # node.parent['title'] = 'this is followed by a title'
             # node.parent.remove(node)
 
+# how can we somehow add this method to all nodes and descendants?
+def before(node):
+    index = node.parent.index(node)
+    if index:
+        return node.parent[index-1]
+    else:
+        return None
 
+# how can we somehow add this method to all nodes and descendants?
+def after(node):
+    index = node.parent.index(node)
+    if index == len(node.parent)-1:
+        return None
+    else:
+        return node.parent[index+1]
+
+# perhaps a generator for next?
+
+class Group(docutils.transforms.Transform):
+
+    ''' This transform groups consecutive **topic** nodes under a container.
+        It should eventually become more generic, also working for nodes
+        other than topics.
+    '''
+
+    '''
+    there is a writer_aux.Admonitions transform that does this:
+
+            Transform specific admonitions, like this:
+
+                <note>
+                    <paragraph>
+                         Note contents ...
+
+            into generic admonitions, like this::
+
+                <admonition classes="note">
+                    <title>
+                        Note
+                    <paragraph>
+                        Note contents ...
+
+    it has a priority of 920, so our transform needs a higher (lower)
+    priority in order to work.
+    '''
+    default_priority = 919
+
+    def is_first_of_group(self, node):
+        return isinstance(node, nodes.hint) and not isinstance(before(node), nodes.hint)
+
+    def apply(self):
+        self.document.reporter.warning('Applying the group transform!')
+        for first in self.document.traverse(self.is_first_of_group):
+            container = nodes.container()
+
+            group = [first]
+            node = after(first)
+            while isinstance(node, nodes.hint):
+                group += node
+                node = after(node)
+            print(group)
+
+            first.replace_self(container)
+            container += group
 
 class Parser(docutils.parsers.rst.Parser):
 
@@ -207,7 +270,7 @@ class Parser(docutils.parsers.rst.Parser):
     # to return the transforms you want
 
     def get_transforms(self):
-        return super().get_transforms() + [Test, Title]
+        return super().get_transforms() + [Group]
 
 # language is now hard-coded to greek
 # eventually it will be determined otherwise
