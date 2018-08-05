@@ -236,9 +236,9 @@ nodes.Node.before = before
 nodes.Node.after = after
 nodes.Node.group = group
 
-### TODO: make sure the container has an appropriate class name (group + cls)
-
 def group_transform(cls, priority):
+
+    clsname = cls.__name__.lower() + '-group'
 
     class Group(docutils.transforms.Transform):
         # This transform groups consecutive **topic** nodes under a container.
@@ -259,6 +259,7 @@ def group_transform(cls, priority):
                 point = parent.index(first)
                 # create container and insert it in parent
                 container = nodes.container()
+                container['classes'].append(clsname)
                 parent.insert(point, container)
                 # gather nodes in group and move them into the container
                 for node in first.group(cls):
