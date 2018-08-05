@@ -236,34 +236,36 @@ nodes.Node.before = before
 nodes.Node.after = after
 nodes.Node.group = group
 
-class Group(docutils.transforms.Transform):
+### TODO: make sure the container has an appropriate class name (group + cls)
 
-    ''' This transform groups consecutive **topic** nodes under a container.
-        It should eventually become more generic, also working for nodes
-        other than topics.
-    '''
+def group_transform(cls, priority):
 
-    # the writer_aux.Admonitions transform works on admonitions, with a
-    # priority of 920, so our transform needs a higher (lower)
-    # priority in order to work.
-    default_priority = 919
+    class Group(docutils.transforms.Transform):
+        # This transform groups consecutive **topic** nodes under a container.
 
-    def is_first_of_group(self, node):
-        return isinstance(node, nodes.hint) and not isinstance(node.before(), nodes.hint)
+        # the writer_aux.Admonitions transform works on admonitions, with a
+        # priority of 920, so our transform needs a higher (lower)
+        # priority in order to work.
+        assert priority < 920
+        default_priority = priority
 
-    def apply(self):
-        self.document.reporter.warning('Applying the group transform!')
+        def is_first_of_group(self, node):
+            return isinstance(node, cls) and not isinstance(node.before(), cls)
 
-        for first in self.document.traverse(self.is_first_of_group):
+        def apply(self):
+            for first in self.document.traverse(self.is_first_of_group):
+                # determine parent of group and where to insert the container
+                parent = first.parent
+                point = parent.index(first)
+                # create container and insert it in parent
+                container = nodes.container()
+                parent.insert(point, container)
+                # gather nodes in group and move them into the container
+                for node in first.group(cls):
+                    parent.remove(node)
+                    container.append(node)
 
-            parent = first.parent
-            point = parent.index(first)
-            container = nodes.container()
-            parent.insert(point, container)
-
-            for node in first.group(nodes.hint):
-                parent.remove(node)
-                container.append(node)
+    return Group
 
 
 class Parser(docutils.parsers.rst.Parser):
@@ -273,7 +275,9 @@ class Parser(docutils.parsers.rst.Parser):
     # to return the transforms you want
 
     def get_transforms(self):
-        return super().get_transforms() + [Group]
+        return super().get_transforms() + [
+                group_transform(nodes.hint, 918),
+                group_transform(nodes.topic, 919)]
 
 # language is now hard-coded to greek
 # eventually it will be determined otherwise
