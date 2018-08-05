@@ -213,14 +213,14 @@ def after(node):
     else:
         return node.parent[index+1]
 
-# all nodes.Node now have before and after methods
-nodes.Node.before = before
-nodes.Node.after = after
-
-# cls should be replaced with a more general condition function
-def conditional_siblings(node, cls, include_first=True):
+# cls might eventually be replaced with a more general condition function
+def group(node, cls, include_first=True):
+    '''
+    Storing the next node before yielding the current one makes it possible
+    to modify the node yielded without affecting the iterable.
+    '''
     next = node.after()
-    if include_first:
+    if include_first and isinstance(node, cls):
         yield node
     node = next
     if next is not None:
@@ -230,6 +230,11 @@ def conditional_siblings(node, cls, include_first=True):
             node = next
             if next is not None:
                 next = node.after()
+
+# all nodes.Node now have before, after and conditional methods
+nodes.Node.before = before
+nodes.Node.after = after
+nodes.Node.group = group
 
 class Group(docutils.transforms.Transform):
 
@@ -256,7 +261,7 @@ class Group(docutils.transforms.Transform):
             container = nodes.container()
             parent.insert(point, container)
 
-            for node in conditional_siblings(first, nodes.hint):
+            for node in first.group(nodes.hint):
                 parent.remove(node)
                 container.append(node)
 
