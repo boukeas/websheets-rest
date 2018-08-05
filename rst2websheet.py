@@ -213,14 +213,14 @@ def after(node):
     else:
         return node.parent[index+1]
 
-# all nodes.Node now have before and after methods
-nodes.Node.before = before
-nodes.Node.after = after
-
-# cls should be replaced with a more general condition function
-def conditional_siblings(node, cls, include_first=True):
+# cls might eventually be replaced with a more general condition function
+def group(node, cls, include_first=True):
+    '''
+    Storing the next node before yielding the current one makes it possible
+    to modify the node yielded without affecting the iterable.
+    '''
     next = node.after()
-    if include_first:
+    if include_first and isinstance(node, cls):
         yield node
     node = next
     if next is not None:
@@ -231,34 +231,41 @@ def conditional_siblings(node, cls, include_first=True):
             if next is not None:
                 next = node.after()
 
-class Group(docutils.transforms.Transform):
+# all nodes.Node now have before, after and conditional methods
+nodes.Node.before = before
+nodes.Node.after = after
+nodes.Node.group = group
 
-    ''' This transform groups consecutive **topic** nodes under a container.
-        It should eventually become more generic, also working for nodes
-        other than topics.
-    '''
+### TODO: make sure the container has an appropriate class name (group + cls)
 
-    # the writer_aux.Admonitions transform works on admonitions, with a
-    # priority of 920, so our transform needs a higher (lower)
-    # priority in order to work.
-    default_priority = 919
+def group_transform(cls, priority):
 
-    def is_first_of_group(self, node):
-        return isinstance(node, nodes.hint) and not isinstance(node.before(), nodes.hint)
+    class Group(docutils.transforms.Transform):
+        # This transform groups consecutive **topic** nodes under a container.
 
-    def apply(self):
-        self.document.reporter.warning('Applying the group transform!')
+        # the writer_aux.Admonitions transform works on admonitions, with a
+        # priority of 920, so our transform needs a higher (lower)
+        # priority in order to work.
+        assert priority < 920
+        default_priority = priority
 
-        for first in self.document.traverse(self.is_first_of_group):
+        def is_first_of_group(self, node):
+            return isinstance(node, cls) and not isinstance(node.before(), cls)
 
-            parent = first.parent
-            point = parent.index(first)
-            container = nodes.container()
-            parent.insert(point, container)
+        def apply(self):
+            for first in self.document.traverse(self.is_first_of_group):
+                # determine parent of group and where to insert the container
+                parent = first.parent
+                point = parent.index(first)
+                # create container and insert it in parent
+                container = nodes.container()
+                parent.insert(point, container)
+                # gather nodes in group and move them into the container
+                for node in first.group(cls):
+                    parent.remove(node)
+                    container.append(node)
 
-            for node in conditional_siblings(first, nodes.hint):
-                parent.remove(node)
-                container.append(node)
+    return Group
 
 
 class Parser(docutils.parsers.rst.Parser):
@@ -268,7 +275,9 @@ class Parser(docutils.parsers.rst.Parser):
     # to return the transforms you want
 
     def get_transforms(self):
-        return super().get_transforms() + [Group]
+        return super().get_transforms() + [
+                group_transform(nodes.hint, 918),
+                group_transform(nodes.topic, 919)]
 
 # language is now hard-coded to greek
 # eventually it will be determined otherwise
