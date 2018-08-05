@@ -184,6 +184,7 @@ class Test(docutils.transforms.Transform):
     def apply(self):
         self.document.reporter.warning('Applying the test transform!')
 
+# don't use this -- i'm not sure it should even be a Transform
 class Title(docutils.transforms.Transform):
 
     default_priority = 999
@@ -198,6 +199,66 @@ class Title(docutils.transforms.Transform):
             # node.parent['title'] = 'this is followed by a title'
             # node.parent.remove(node)
 
+def before(node):
+    index = node.parent.index(node)
+    if index:
+        return node.parent[index-1]
+    else:
+        return None
+
+def after(node):
+    index = node.parent.index(node)
+    if index == len(node.parent)-1:
+        return None
+    else:
+        return node.parent[index+1]
+
+# all nodes.Node now have before and after methods
+nodes.Node.before = before
+nodes.Node.after = after
+
+# cls should be replaced with a more general condition function
+def conditional_siblings(node, cls, include_first=True):
+    next = node.after()
+    if include_first:
+        yield node
+    node = next
+    if next is not None:
+        next = node.after()
+        while isinstance(node, cls):
+            yield node
+            node = next
+            if next is not None:
+                next = node.after()
+
+class Group(docutils.transforms.Transform):
+
+    ''' This transform groups consecutive **topic** nodes under a container.
+        It should eventually become more generic, also working for nodes
+        other than topics.
+    '''
+
+    # the writer_aux.Admonitions transform works on admonitions, with a
+    # priority of 920, so our transform needs a higher (lower)
+    # priority in order to work.
+    default_priority = 919
+
+    def is_first_of_group(self, node):
+        return isinstance(node, nodes.hint) and not isinstance(node.before(), nodes.hint)
+
+    def apply(self):
+        self.document.reporter.warning('Applying the group transform!')
+
+        for first in self.document.traverse(self.is_first_of_group):
+
+            parent = first.parent
+            point = parent.index(first)
+            container = nodes.container()
+            parent.insert(point, container)
+
+            for node in conditional_siblings(first, nodes.hint):
+                parent.remove(node)
+                container.append(node)
 
 
 class Parser(docutils.parsers.rst.Parser):
@@ -207,7 +268,7 @@ class Parser(docutils.parsers.rst.Parser):
     # to return the transforms you want
 
     def get_transforms(self):
-        return super().get_transforms() + [Test, Title]
+        return super().get_transforms() + [Group]
 
 # language is now hard-coded to greek
 # eventually it will be determined otherwise
