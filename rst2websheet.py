@@ -184,6 +184,7 @@ class Test(docutils.transforms.Transform):
     def apply(self):
         self.document.reporter.warning('Applying the test transform!')
 
+# don't use this -- i'm not sure it should even be a Transform
 class Title(docutils.transforms.Transform):
 
     default_priority = 999
@@ -216,7 +217,19 @@ def after(node):
 nodes.Node.before = before
 nodes.Node.after = after
 
-# perhaps a generator for next?
+# cls should be replaced with a more general condition function
+def conditional_siblings(node, cls, include_first=True):
+    next = node.after()
+    if include_first:
+        yield node
+    node = next
+    if next is not None:
+        next = node.after()
+        while isinstance(node, cls):
+            yield node
+            node = next
+            if next is not None:
+                next = node.after()
 
 class Group(docutils.transforms.Transform):
 
@@ -225,44 +238,28 @@ class Group(docutils.transforms.Transform):
         other than topics.
     '''
 
-    '''
-    there is a writer_aux.Admonitions transform that does this:
-
-            Transform specific admonitions, like this:
-
-                <note>
-                    <paragraph>
-                         Note contents ...
-
-            into generic admonitions, like this::
-
-                <admonition classes="note">
-                    <title>
-                        Note
-                    <paragraph>
-                        Note contents ...
-
-    it has a priority of 920, so our transform needs a higher (lower)
-    priority in order to work.
-    '''
+    # the writer_aux.Admonitions transform works on admonitions, with a
+    # priority of 920, so our transform needs a higher (lower)
+    # priority in order to work.
     default_priority = 919
 
     def is_first_of_group(self, node):
-        # return isinstance(node, nodes.hint) and not isinstance(before(node), nodes.hint)
         return isinstance(node, nodes.hint) and not isinstance(node.before(), nodes.hint)
 
     def apply(self):
         self.document.reporter.warning('Applying the group transform!')
-        for first in self.document.traverse(self.is_first_of_group):
-            group = [first]
-            node = first.after()
-            while isinstance(node, nodes.hint):
-                group += node
-                node = node.after()
 
+        for first in self.document.traverse(self.is_first_of_group):
+
+            parent = first.parent
+            point = parent.index(first)
             container = nodes.container()
-            first.replace_self(container)
-            container += group
+            parent.insert(point, container)
+
+            for node in conditional_siblings(first, nodes.hint):
+                parent.remove(node)
+                container.append(node)
+
 
 class Parser(docutils.parsers.rst.Parser):
 
