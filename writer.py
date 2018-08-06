@@ -1,6 +1,8 @@
 # docutil imports
 import docutils.writers.html5_polyglot
 from docutils import nodes
+# local imports
+from directives import explanation
 
 # python2-compatible code in the html-translator uses this function
 def unicode(v):
@@ -128,6 +130,12 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_container(self, node):
         self.body.append('</div>\n')
 
+    def visit_explanation(self, node):
+        self.body.append(self.starttag(node, 'div', CLASS='explanation'))
+
+    def depart_explanation(self, node):
+        self.body.append('</div>\n')
+
     def visit_transition(self, node):
         self.body.append(self.emptytag(node, 'hr'))
 
@@ -170,3 +178,56 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_literal(self, node):
         # skipped unless literal element is from "code" role:
         self.body.append('</code>')
+
+    def visit_title(self, node):
+        """Only 6 section levels are supported by HTML."""
+        check_id = 0  # TODO: is this a bool (False) or a counter?
+        close_tag = '</p>\n'
+        if isinstance(node.parent, explanation):
+            self.body.append(
+                  self.starttag(node, 'p', '', CLASS='explanation-title'))
+        elif isinstance(node.parent, nodes.topic):
+            self.body.append(
+                  self.starttag(node, 'p', '', CLASS='topic-title'))
+        elif isinstance(node.parent, nodes.sidebar):
+            self.body.append(
+                  self.starttag(node, 'p', '', CLASS='sidebar-title'))
+        elif isinstance(node.parent, nodes.Admonition):
+            self.body.append(
+                  self.starttag(node, 'p', '', CLASS='admonition-title'))
+        elif isinstance(node.parent, nodes.table):
+            self.body.append(
+                  self.starttag(node, 'caption', ''))
+            close_tag = '</caption>\n'
+        elif isinstance(node.parent, nodes.document):
+            self.body.append(self.starttag(node, 'h1', '', CLASS='title'))
+            close_tag = '</h1>\n'
+            self.in_document_title = len(self.body)
+        else:
+            assert isinstance(node.parent, nodes.section)
+            h_level = self.section_level + self.initial_header_level - 1
+            atts = {}
+            if (len(node.parent) >= 2 and
+                isinstance(node.parent[1], nodes.subtitle)):
+                atts['CLASS'] = 'with-subtitle'
+            self.body.append(
+                  self.starttag(node, 'h%s' % h_level, '', **atts))
+            atts = {}
+            if node.hasattr('refid'):
+                atts['class'] = 'toc-backref'
+                atts['href'] = '#' + node['refid']
+            if atts:
+                self.body.append(self.starttag({}, 'a', '', **atts))
+                close_tag = '</a></h%s>\n' % (h_level)
+            else:
+                close_tag = '</h%s>\n' % (h_level)
+        self.context.append(close_tag)
+
+    def depart_title(self, node):
+        self.body.append(self.context.pop())
+        if self.in_document_title:
+            self.title = self.body[self.in_document_title:-1]
+            self.in_document_title = 0
+            self.body_pre_docinfo.extend(self.body)
+            self.html_title.extend(self.body)
+            del self.body[:]
