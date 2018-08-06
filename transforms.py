@@ -44,13 +44,21 @@ nodes.Node.before = before
 nodes.Node.after = after
 nodes.Node.group = group
 
+def test_transform(priority):
 
-class Test(docutils.transforms.Transform):
+    import sys
 
-    default_priority = 900
+    class Test(docutils.transforms.Transform):
 
-    def apply(self):
-        self.document.reporter.warning('Applying a test transform!')
+        default_priority = priority
+
+        def apply(self):
+            self.document.reporter.warning('Applying a test transform!')
+            sys.stderr.write("[Test] priority: " + str(priority) + "\n")
+            sys.stderr.write(str(self.document) + "\n")
+
+    return Test
+
 
 def group_transform(cls, priority):
 

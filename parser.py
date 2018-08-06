@@ -2,7 +2,7 @@
 import docutils.parsers.rst
 from docutils import nodes
 # local import
-from transforms import group_transform
+from transforms import group_transform, test_transform
 
 class Parser(docutils.parsers.rst.Parser):
 
