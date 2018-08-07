@@ -29,3 +29,37 @@ class Explanation(Directive):
         return [node]
 
 directives.register_directive("explanation", Explanation)
+
+###
+
+class commentary(nodes.container): pass
+
+class Commentary(Directive):
+
+        optional_arguments = 1
+        final_argument_whitespace = True
+        option_spec = {'name': directives.unchanged,
+                       'orphan': directives.flag}
+        has_content = True
+
+        node_class = commentary
+
+        def run(self):
+            self.assert_has_content()
+            text = '\n'.join(self.content)
+            try:
+                if self.arguments:
+                    classes = directives.class_option(self.arguments[0])
+                else:
+                    classes = []
+            except ValueError:
+                raise self.error(
+                    'Invalid class attribute value for "%s" directive: "%s".'
+                    % (self.name, self.arguments[0]))
+            node = self.node_class(text)
+            node['classes'].extend(classes)
+            self.add_name(node)
+            self.state.nested_parse(self.content, self.content_offset, node)
+            return [node]
+
+directives.register_directive("commentary", Commentary)

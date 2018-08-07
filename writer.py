@@ -136,6 +136,12 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_explanation(self, node):
         self.body.append('</div>\n')
 
+    def visit_commentary(self, node):
+        self.body.append(self.starttag(node, 'div', CLASS='commentary'))
+
+    def depart_commentary(self, node):
+        self.body.append('</div>\n')
+
     def visit_transition(self, node):
         self.body.append(self.emptytag(node, 'hr'))
 
