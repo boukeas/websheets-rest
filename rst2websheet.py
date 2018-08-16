@@ -19,5 +19,7 @@ public = docutils.core.publish_file(
             settings_overrides={
                 'language_code': language_tag,
                 'embed_stylesheet': False,
-                'initial_header_level': 2
+                'initial_header_level': 2,
+                'dump_settings': 1,
+                'dump_transforms': 1
             })
