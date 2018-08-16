@@ -87,24 +87,16 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
         attlist = sorted(atts.items())
         parts = [tagname]
         for name, value in attlist:
-            # value=None was used for boolean attributes without
-            # value, but this isn't supported by XHTML.
-            assert value is not None
-            if isinstance(value, list):
-                values = [unicode(v) for v in value]
+            # value=None is used for boolean attributes without value
+            if value is None:
+                parts.append('%s' % (name.lower()))
+            elif isinstance(value, list):
+                values = [v for v in value]
                 parts.append('%s="%s"' % (name.lower(),
                                           self.attval(' '.join(values))))
             else:
                 parts.append('%s="%s"' % (name.lower(),
-                                          self.attval(unicode(value))))
-
-        # empty tags need a closing / to be XHTML compatible
-        # HTML5 does not require this, so I am removing the if statement
-        # if empty:
-        #     infix = ' /'
-        # else:
-        #     infix = ''
-        # return ''.join(prefix) + '<%s%s>' % (' '.join(parts), infix) + suffix
+                                          self.attval(value)))
 
         return ''.join(prefix) + '<%s>' % ' '.join(parts) + suffix
 
@@ -137,7 +129,13 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
         self.body.append('</div>\n')
 
     def visit_commentary(self, node):
-        self.body.append(self.starttag(node, 'div', CLASS='commentary'))
+        if 'orphan' in node:
+            self.body.append(self.starttag(node, 'div',
+                                           Class='commentary',
+                                           Orphan=None))
+        else:
+            self.body.append(self.starttag(node, 'div',
+                                           Class='commentary'))
 
     def depart_commentary(self, node):
         self.body.append('</div>\n')

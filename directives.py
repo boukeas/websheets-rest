@@ -59,6 +59,8 @@ class Commentary(Directive):
             node = self.node_class(text)
             node['classes'].extend(classes)
             self.add_name(node)
+            if 'orphan' in self.options:
+                node['orphan'] = '1'
             self.state.nested_parse(self.content, self.content_offset, node)
             return [node]
 
