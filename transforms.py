@@ -92,77 +92,13 @@ def group_transform(cls, priority):
 
     return Group
 
-###
-
-'''
-class AnonymousHyperlinks(Transform):
-
-    """
-    Link anonymous references to targets.  Given::
-
-        <paragraph>
-            <reference anonymous="1">
-                internal
-            <reference anonymous="1">
-                external
-        <target anonymous="1" ids="id1">
-        <target anonymous="1" ids="id2" refuri="http://external">
-
-    Corresponding references are linked via "refid" or resolved via "refuri"::
-
-        <paragraph>
-            <reference anonymous="1" refid="id1">
-                text
-            <reference anonymous="1" refuri="http://external">
-                external
-        <target anonymous="1" ids="id1">
-        <target anonymous="1" ids="id2" refuri="http://external">
-    """
-
-    default_priority = 440
-
-    def apply(self):
-        anonymous_refs = []
-        anonymous_targets = []
-        for node in self.document.traverse(nodes.reference):
-            if node.get('anonymous'):
-                anonymous_refs.append(node)
-        for node in self.document.traverse(nodes.target):
-            if node.get('anonymous'):
-                anonymous_targets.append(node)
-        if len(anonymous_refs) \
-              != len(anonymous_targets):
-            msg = self.document.reporter.error(
-                  'Anonymous hyperlink mismatch: %s references but %s '
-                  'targets.\nSee "backrefs" attribute for IDs.'
-                  % (len(anonymous_refs), len(anonymous_targets)))
-            msgid = self.document.set_id(msg)
-            for ref in anonymous_refs:
-                prb = nodes.problematic(
-                      ref.rawsource, ref.rawsource, refid=msgid)
-                prbid = self.document.set_id(prb)
-                msg.add_backref(prbid)
-                ref.replace_self(prb)
-            return
-        for ref, target in zip(anonymous_refs, anonymous_targets):
-            target.referenced = 1
-            while True:
-                if target.hasattr('refuri'):
-                    ref['refuri'] = target['refuri']
-                    ref.resolved = 1
-                    break
-                else:
-                    if not target['ids']:
-                        # Propagated target.
-                        target = self.document.ids[target['refid']]
-                        continue
-                    ref['refid'] = target['ids'][0]
-                    self.document.note_refid(ref)
-                    break
-
-'''
 
 class AnonymousCommentaryHyperlinks(docutils.transforms.Transform):
+
+    """
+        Link anonymous hyperlinks in literal blocks to the commentaries that
+        *immediately* follow the literal blocks.
+    """
 
     # docutils.parsers.rst.directives.references.AnonymousHyperlinks at 440
     default_priority = 439
@@ -172,33 +108,28 @@ class AnonymousCommentaryHyperlinks(docutils.transforms.Transform):
         return isinstance(node, nodes.reference) and node['anonymous']
 
     def apply(self):
-        # add appropriate error handling (all the else's in the if's...)
-        # - every codeblock with anonymous references must be _immediately_
-        #   followed by a group of (the same number of) commentaries,
-        #   excluding orphan commentaries
-        self.document.reporter.warning('Applying anonymous reference transform!')
         for codeblock in self.document.traverse(nodes.literal_block):
             # collect anonymous references
             references = [ref for ref in codeblock.traverse(self.is_anonymous_reference)]
             if references:
                 # collect non-orphan commentaries
-                next = codeblock.after()
-                if next:
-                    commentaries = [node for node in next.group(commentary)
-                                    if 'orphan' not in node]
+                commentaries = [node for node in codeblock.group(commentary, include_first=False)
+                                if 'orphan' not in node]
 
-                    if len(references) == len(commentaries):
-                        for ref, target in zip(references, commentaries):
-                            # must unset anonymous attr, otherwise the reference
-                            # is also processed by other transforms
-                            del ref['anonymous']
-                            #
-                            if not target['ids']:
-                                self.document.set_id(target)
-                            ref['refid'] = target['ids'][0]
-                            self.document.note_refid(ref)
-                            target.referenced = 1
-
-                # TODO:
-                # - set refid's
-                # - probably remove names from references
+                if len(references) == len(commentaries):
+                    for ref, target in zip(references, commentaries):
+                        # must unset anonymous attr, otherwise the reference
+                        # is also processed by other related transforms
+                        del ref['anonymous']
+                        #
+                        if not target['ids']:
+                            self.document.set_id(target)
+                        ref['refid'] = target['ids'][0]
+                        self.document.note_refid(ref)
+                        target.referenced = 1
+                else:
+                    self.document.reporter.error(
+                          'Commentary hyperlink mismatch: literal block '
+                          'contains %s references but is followed by '
+                          '%s non-orphan commentary targets.'
+                          % (len(references), len(commentaries)))
