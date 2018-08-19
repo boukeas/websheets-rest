@@ -19,7 +19,8 @@ public = docutils.core.publish_file(
             settings_overrides={
                 'language_code': language_tag,
                 'embed_stylesheet': False,
+                'stylesheet_path': 'websheets.css, prettify.css',
                 'initial_header_level': 2,
-                'dump_settings': 1,
-                'dump_transforms': 1
+                'dump_settings': 0,
+                'dump_transforms': 0
             })
