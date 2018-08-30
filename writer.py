@@ -1,6 +1,6 @@
 # docutil imports
 import docutils.writers.html5_polyglot
-from docutils import nodes
+from docutils import nodes, frontend, io, utils
 # local imports
 from directives import explanation
 
@@ -15,6 +15,22 @@ class Writer(docutils.writers.html5_polyglot.Writer):
     Standard docutils html5 writer with a custom html translator
     '''
 
+    visitor_attributes = (docutils.writers.html5_polyglot.Writer.visitor_attributes[:2] +
+                          ('scripts',) +
+                          docutils.writers.html5_polyglot.Writer.visitor_attributes[2:])
+
+    settings_spec = ('HTML-Specific Options', None,
+                     docutils.writers.html5_polyglot.Writer.settings_spec[2] + (
+                     ('Embed the script(s) in the output HTML file.',
+                      ['--embed-script'],
+                      {'default': 1,
+                       'action': 'store_true',
+                       'validator': frontend.validate_boolean}),
+                     ('Link to the scripts(s) in the output HTML file. '
+                      'This is the default.',
+                      ['--link-script'],
+                      {'dest': 'embed_script', 'action': 'store_false'}),))
+
     def __init__(self):
         super().__init__()
         self.translator_class = WebsheetHTMLTranslator
@@ -26,7 +42,37 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     content_type = ('<meta charset="%s">\n')
     generator = ('<meta name="generator" content="rst2websheets '
                  'based on docutils %s">\n')
+
     stylesheet_link = '<link rel="stylesheet" href="%s" type="text/css">\n'
+
+    script_link = '<script type="text/javascript" src="%s"></script>\n'
+    embedded_script = '<script type="text/javascript">\n%s\n</script>\n'
+
+    def __init__(self, document):
+        super().__init__(document)
+        # Retrieve list of script references from the settings object
+        scripts = document.settings.script_path or []
+        if not isinstance(scripts, list):
+            scripts = [path.strip() for path in scripts.split(',')]
+        self.scripts = [self.script_call(path) for path in scripts]
+
+    def script_call(self, path):
+        """Return code to reference or embed script file `path`"""
+        if self.settings.embed_script:
+            try:
+                content = io.FileInput(source_path=path, encoding='utf-8').read()
+                self.settings.record_dependencies.add(path)
+            except IOError as err:
+                msg = "Cannot embed script '%s': %s." % (
+                                path, err.strerror)
+                self.document.reporter.error(msg)
+                return '<--- %s --->\n' % msg
+            return self.embedded_script % content
+        # else link to script file:
+        if self.settings.script_path:
+            # adapt path relative to output
+            path = utils.relative_path(self.settings._destination, path)
+        return self.script_link % self.encode(path)
 
     def starttag(self, node, tagname, suffix='\n', empty=False, **attributes):
         """
