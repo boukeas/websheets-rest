@@ -19,7 +19,7 @@ def after(node):
     else:
         return node.parent[index+1]
 
-def group(node, cls, include_first=True):
+def group_cls(node, cls, include_first=True):
     """
     Iterates over all nodes after this one that are instances of the cls class.
     # cls might eventually be replaced with a more general condition function
@@ -44,7 +44,7 @@ def group(node, cls, include_first=True):
 # add before, after and group methods to nodes.Node
 nodes.Node.before = before
 nodes.Node.after = after
-nodes.Node.group = group
+nodes.Node.group_cls = group_cls
 
 def test_transform(priority):
 
@@ -62,12 +62,14 @@ def test_transform(priority):
     return Test
 
 
+class group(nodes.General, nodes.Element): pass
+
 def group_transform(cls, priority):
 
     clsname = cls.__name__.lower() + '-group'
 
     class Group(docutils.transforms.Transform):
-        """ Groups consecutive nodes of the cls class under a container."""
+        """ Groups consecutive nodes of the cls class under a group container."""
 
         # because the writer_aux.Admonitions transform has a priority of 920
         assert priority < 920
@@ -82,11 +84,11 @@ def group_transform(cls, priority):
                 parent = first.parent
                 point = parent.index(first)
                 # create container and insert it in parent
-                container = nodes.container()
+                container = group()
                 container['classes'].append(clsname)
                 parent.insert(point, container)
                 # gather nodes in group and move them into the container
-                for node in first.group(cls):
+                for node in first.group_cls(cls):
                     parent.remove(node)
                     container.append(node)
 
@@ -113,7 +115,7 @@ class AnonymousCommentaryHyperlinks(docutils.transforms.Transform):
             references = [ref for ref in codeblock.traverse(self.is_anonymous_reference)]
             if references:
                 # collect non-orphan commentaries
-                commentaries = [node for node in codeblock.group(commentary, include_first=False)
+                commentaries = [node for node in codeblock.group_cls(commentary, include_first=False)
                                 if 'orphan' not in node]
 
                 if len(references) == len(commentaries):

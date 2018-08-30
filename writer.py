@@ -184,6 +184,12 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_container(self, node):
         self.body.append('</div>\n')
 
+    def visit_group(self, node):
+        self.body.append(self.starttag(node, 'div', CLASS='group'))
+
+    def depart_group(self, node):
+        self.body.append('</div>\n')
+
     def visit_explanation(self, node):
         self.body.append(self.starttag(node, 'div', CLASS='explanation'))
 
