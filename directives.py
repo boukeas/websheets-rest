@@ -2,7 +2,7 @@
 from docutils.parsers.rst import directives, Directive
 from docutils import nodes
 
-class explanation(nodes.container): pass
+class explanation(nodes.General, nodes.Element): pass
 
 class Explanation(Directive):
 
