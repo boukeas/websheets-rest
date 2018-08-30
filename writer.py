@@ -23,13 +23,29 @@ class Writer(docutils.writers.html5_polyglot.Writer):
                      docutils.writers.html5_polyglot.Writer.settings_spec[2] + (
                      ('Embed the script(s) in the output HTML file.',
                       ['--embed-script'],
-                      {'default': 1,
-                       'action': 'store_true',
+                      {'default': 0,
+                       'action': 'store_false',
                        'validator': frontend.validate_boolean}),
                      ('Link to the scripts(s) in the output HTML file. '
                       'This is the default.',
                       ['--link-script'],
-                      {'dest': 'embed_script', 'action': 'store_false'}),))
+                      {'dest': 'embed_script',
+                       'action': 'store_true'}),
+                     ('Comma separated list of script paths. '
+                      'Relative paths are expanded if a matching file is found '
+                      'in the --script-dirs. With --link-script, the path is '
+                      'rewritten relative to the output HTML file. ',
+                      ['--script-path'],
+                      {'metavar': '<file[,file,...]>',
+                       'validator': frontend.validate_comma_separated_list,
+                       'default': ''}),
+                     ('Comma-separated list of directories where scripts are found. '
+                      'Used by --script-path when expanding relative path arguments. ',
+                      ['--script-dirs'],
+                      {'metavar': '<dir[,dir,...]>',
+                       'validator': frontend.validate_comma_separated_list,
+                       'default': ''}),
+                     ))
 
     def __init__(self):
         super().__init__()
