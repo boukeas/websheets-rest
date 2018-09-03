@@ -91,6 +91,7 @@ def group_transform(cls, priority):
                 for node in first.group_cls(cls):
                     parent.remove(node)
                     container.append(node)
+                    node['classes'].append('group-element')
 
     return Group
 
