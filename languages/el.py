@@ -37,7 +37,9 @@ labels = {
       'note': 'Σημείωση',
       'tip': 'Συμβουλή',
       'warning': 'Προειδοποίηση',
-      'contents': 'Περιεχόμενα'}
+      'contents': 'Περιεχόμενα',
+      # extentions for websheets
+      'solution': 'Λύση'}
 """Mapping of node class name to label text."""
 
 bibliographic_fields = {

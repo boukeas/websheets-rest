@@ -90,7 +90,11 @@ class Hint(Directive):
         node = self.node_class(text, **self.options)
         self.add_name(node)
         self.state.nested_parse(self.content, self.content_offset, node)
-        title = nodes.title('', language.labels['hint'])
+        if 'solution' in self.options:
+            title_label = 'solution'
+        else:
+            title_label = 'hint'
+        title = nodes.title('', language.labels[title_label])
         node.insert(0, title)
         return [node]
 
