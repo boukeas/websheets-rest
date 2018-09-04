@@ -2,7 +2,7 @@
 import docutils.writers.html5_polyglot
 from docutils import nodes, frontend, io, utils
 # local imports
-from directives import explanation
+from directives import explanation, hint
 
 # python2-compatible code in the html-translator uses this function
 def unicode(v):
@@ -144,6 +144,7 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     # visitor methods (for new types of nodes or overriding for existing ones)
 
     def visit_admonition(self, node):
+        """
         # this doesn't work, apparently, they are all admonitions
         # if isinstance(node, nodes.hint):
         if 'hint' in node['classes']:
@@ -152,13 +153,15 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
             close_tag = '</details>\n'
         else:
             # default behaviour
-            node['classes'].insert(0, 'admonition')
-            self.body.append(self.starttag(node, 'div'))
-            close_tag = '</div>\n'
-        self.context.append(close_tag)
+        """
+        node['classes'].insert(0, 'admonition')
+        self.body.append(self.starttag(node, 'div'))
+        # close_tag = '</div>\n'
+        # self.context.append(close_tag)
 
     def depart_admonition(self, node=None):
-        self.body.append(self.context.pop())
+        self.body.append('</div>\n')
+        # self.body.append(self.context.pop())
 
     def visit_commentary(self, node):
         if 'orphan' in node:
@@ -196,6 +199,15 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
 
     def depart_group(self, node):
         self.body.append('</div>\n')
+
+    def visit_hint(self, node):
+        args = {'CLASS': 'hint'}
+        if node.hasattr('open'): args['OPEN'] = None
+        if node.hasattr('solution'): args['SOLUTION'] = None
+        self.body.append(self.starttag(node, 'details', **args))
+
+    def depart_hint(self, node):
+        self.body.append('</details>\n')
 
     # inline literal
     def visit_literal(self, node):
@@ -255,8 +267,10 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
         check_id = 0  # TODO: is this a bool (False) or a counter?
         close_tag = '</p>\n'
         if isinstance(node.parent, explanation):
-            self.body.append(
-                  self.starttag(node, 'summary', ''))
+            self.body.append(self.starttag(node, 'summary', ''))
+            close_tag = '</summary>\n'
+        elif isinstance(node.parent, hint):
+            self.body.append(self.starttag(node, 'summary', ''))
             close_tag = '</summary>\n'
         elif isinstance(node.parent, nodes.topic):
             self.body.append(
@@ -265,13 +279,8 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
             self.body.append(
                   self.starttag(node, 'p', '', CLASS='sidebar-title'))
         elif isinstance(node.parent, nodes.Admonition):
-            if 'hint' in node.parent['classes']:
-                self.body.append(
-                      self.starttag(node, 'summary', ''))
-                close_tag = '</summary>\n'
-            else:
-                self.body.append(
-                    self.starttag(node, 'p', '', CLASS='admonition-title'))
+            self.body.append(
+                self.starttag(node, 'p', '', CLASS='admonition-title'))
         elif isinstance(node.parent, nodes.table):
             self.body.append(
                   self.starttag(node, 'caption', ''))

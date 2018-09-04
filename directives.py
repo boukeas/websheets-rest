@@ -2,6 +2,42 @@
 from docutils.parsers.rst import directives, Directive
 from docutils import nodes
 
+###
+
+class commentary(nodes.container): pass
+
+class Commentary(Directive):
+
+    optional_arguments = 1
+    final_argument_whitespace = True
+    option_spec = {'name': directives.unchanged,
+                   'orphan': directives.flag}
+    has_content = True
+
+    def run(self):
+        self.assert_has_content()
+        text = '\n'.join(self.content)
+        try:
+            if self.arguments:
+                classes = directives.class_option(self.arguments[0])
+            else:
+                classes = []
+        except ValueError:
+            raise self.error(
+                'Invalid class attribute value for "%s" directive: "%s".'
+                % (self.name, self.arguments[0]))
+        node = commentary(text)
+        node['classes'].extend(classes)
+        self.add_name(node)
+        if 'orphan' in self.options:
+            node['orphan'] = '1'
+        self.state.nested_parse(self.content, self.content_offset, node)
+        return [node]
+
+directives.register_directive("commentary", Commentary)
+
+###
+
 class explanation(nodes.General, nodes.Element): pass
 
 class Explanation(Directive):
@@ -14,15 +50,13 @@ class Explanation(Directive):
                    'open': directives.flag}
     has_content = True
 
-    node_class = explanation
-
     def run(self):
         self.assert_has_content()
         title_text = self.arguments[0]
         textnodes, messages = self.state.inline_text(title_text, self.lineno)
         titles = [nodes.title(title_text, '', *textnodes)]
         text = '\n'.join(self.content)
-        node = self.node_class(text, *(titles + messages), **{'classes': ['explanation']})
+        node = explanation(text, *(titles + messages), **{'classes': ['explanation']})
         node['classes'] += self.options.get('class', [])
         if 'open' in self.options: node['open'] = 1
         self.add_name(node)
@@ -33,36 +67,26 @@ directives.register_directive("explanation", Explanation)
 
 ###
 
-class commentary(nodes.container): pass
+class hint(nodes.General, nodes.Element): pass
 
-class Commentary(Directive):
+class Hint(Directive):
 
-        optional_arguments = 1
-        final_argument_whitespace = True
-        option_spec = {'name': directives.unchanged,
-                       'orphan': directives.flag}
-        has_content = True
+    required_arguments = 0
+    optional_arguments = 1
+    final_argument_whitespace = True
+    option_spec = {'name': directives.unchanged,
+                   'open': directives.flag,
+                   'solution': directives.flag}
+    has_content = True
 
-        node_class = commentary
+    node_class = hint
 
-        def run(self):
-            self.assert_has_content()
-            text = '\n'.join(self.content)
-            try:
-                if self.arguments:
-                    classes = directives.class_option(self.arguments[0])
-                else:
-                    classes = []
-            except ValueError:
-                raise self.error(
-                    'Invalid class attribute value for "%s" directive: "%s".'
-                    % (self.name, self.arguments[0]))
-            node = self.node_class(text)
-            node['classes'].extend(classes)
-            self.add_name(node)
-            if 'orphan' in self.options:
-                node['orphan'] = '1'
-            self.state.nested_parse(self.content, self.content_offset, node)
-            return [node]
+    def run(self):
+        self.assert_has_content()
+        text = '\n'.join(self.content)
+        node = self.node_class(text, **self.options)
+        self.add_name(node)
+        self.state.nested_parse(self.content, self.content_offset, node)
+        return [node]
 
-directives.register_directive("commentary", Commentary)
+directives.register_directive("hint", Hint)
