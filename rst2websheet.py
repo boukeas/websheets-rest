@@ -3,12 +3,12 @@ import docutils.core
 # local imports
 from parser import Parser
 from writer import Writer
-from languages import el
+from languages import el as language
 
 # language is hard-coded to greek
 # TODO: determine language via settings
 language_tag = 'el'
-output_language_module = el
+output_language_module = language
 docutils.languages._languages[language_tag] = output_language_module
 
 

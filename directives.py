@@ -1,6 +1,9 @@
 # docutils imports
 from docutils.parsers.rst import directives, Directive
 from docutils import nodes
+# local imports
+# language is currently hard-coded to greek
+from languages import el as language
 
 ###
 
@@ -87,6 +90,8 @@ class Hint(Directive):
         node = self.node_class(text, **self.options)
         self.add_name(node)
         self.state.nested_parse(self.content, self.content_offset, node)
+        title = nodes.title('', language.labels['hint'])
+        node.insert(0, title)
         return [node]
 
 directives.register_directive("hint", Hint)
