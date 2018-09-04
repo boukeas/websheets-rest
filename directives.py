@@ -10,7 +10,8 @@ class Explanation(Directive):
     optional_arguments = 0
     final_argument_whitespace = True
     option_spec = {'class': directives.class_option,
-                   'name': directives.unchanged}
+                   'name': directives.unchanged,
+                   'open': directives.flag}
     has_content = True
 
     node_class = explanation
@@ -23,7 +24,7 @@ class Explanation(Directive):
         text = '\n'.join(self.content)
         node = self.node_class(text, *(titles + messages), **{'classes': ['explanation']})
         node['classes'] += self.options.get('class', [])
-
+        if 'open' in self.options: node['open'] = 1
         self.add_name(node)
         self.state.nested_parse(self.content, self.content_offset, node)
         return [node]

@@ -187,16 +187,14 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_group(self, node):
         self.body.append('</div>\n')
 
-    """
     def visit_explanation(self, node):
-        self.body.append(self.starttag(node, 'div', CLASS='explanation'))
-
-    def depart_explanation(self, node):
-        self.body.append('</div>\n')
-    """
-
-    def visit_explanation(self, node):
-        self.body.append(self.starttag(node, 'details', CLASS='explanation'))
+        if node.hasattr('open'):
+            self.body.append(self.starttag(node, 'details',
+                                           CLASS='explanation',
+                                           OPEN=None))
+        else:
+            self.body.append(self.starttag(node, 'details',
+                                           CLASS='explanation'))
 
     def depart_explanation(self, node):
         self.body.append('</details>\n')
