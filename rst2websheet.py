@@ -24,5 +24,6 @@ public = docutils.core.publish_file(
                 'template': './template.txt',
                 'initial_header_level': 2,
                 'dump_settings': 0,
-                'dump_transforms': 0
+                'dump_transforms': 0,
+                'step_unit_numbering': 1
             })

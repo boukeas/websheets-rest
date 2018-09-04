@@ -45,6 +45,11 @@ class Writer(docutils.writers.html5_polyglot.Writer):
                       {'metavar': '<dir[,dir,...]>',
                        'validator': frontend.validate_comma_separated_list,
                        'default': ''}),
+                     ('Number steps within units',
+                      ['--step-unit-numbering'],
+                      {'default': 0,
+                       'action': 'store_true',
+                       'validator': frontend.validate_boolean})
                      ))
 
     def __init__(self):
@@ -71,6 +76,8 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
         if not isinstance(scripts, list):
             scripts = [path.strip() for path in scripts.split(',')]
         self.scripts = [self.script_call(path) for path in scripts]
+        self.unit_counter = 0
+        self.step_counter = 0
 
     def script_call(self, path):
         """Return code to reference or embed script file `path`"""
@@ -243,11 +250,22 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def visit_section(self, node):
         self.section_level += 1
         if self.section_level == 1:
+            self.unit_counter += 1
+            if self.settings.step_unit_numbering: self.step_counter = 0
             self.body.append(
-                self.starttag(node, 'section', CLASS='unit'))
+                self.starttag(node, 'section',
+                              CLASS='unit',
+                              COUNTER=str(self.unit_counter)))
         elif self.section_level == 2:
+            self.step_counter += 1
+            if self.settings.step_unit_numbering:
+                counter = str(self.unit_counter)+'.'+str(self.step_counter)
+            else:
+                counter = str(self.step_counter)
             self.body.append(
-                self.starttag(node, 'section', CLASS='step'))
+                self.starttag(node, 'section',
+                              CLASS='step',
+                              COUNTER=counter))
         else: # this is where you can BAN deeper sections
             self.body.append(
                 self.starttag(node, 'section'))
