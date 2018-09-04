@@ -120,30 +120,9 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
             ids.extend(atts['ids'])
             del atts['ids']
 
-        # Removed if statement
-        # if ids:
+        # Removed "if ids" statement that handles element id or id's.
         # We don't want id's in the tags, we don't plan to format specific
         # elements using CSS
-        # TODO: have a setting that specifies whether or not id's will be used.
-        if False:
-            atts['id'] = ids[0]
-            for id in ids[1:]:
-                # Add empty "span" elements for additional IDs.  Note
-                # that we cannot use empty "a" elements because there
-                # may be targets inside of references, but nested "a"
-                # elements aren't allowed in XHTML (even if they do
-                # not all have a "href" attribute).
-                if empty or isinstance(node,
-                            (nodes.bullet_list, nodes.docinfo,
-                             nodes.definition_list, nodes.enumerated_list,
-                             nodes.field_list, nodes.option_list,
-                             nodes.table)):
-                    # Insert target right in front of element.
-                    prefix.append('<span id="%s"></span>' % id)
-                else:
-                    # Non-empty tag.  Place the auxiliary <span> tag
-                    # *inside* the element, as the first child.
-                    suffix += '<span id="%s"></span>' % id
 
         # sorted used instead of original attlist.sort()
         attlist = sorted(atts.items())
@@ -190,11 +169,19 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_group(self, node):
         self.body.append('</div>\n')
 
+    """
     def visit_explanation(self, node):
         self.body.append(self.starttag(node, 'div', CLASS='explanation'))
 
     def depart_explanation(self, node):
         self.body.append('</div>\n')
+    """
+
+    def visit_explanation(self, node):
+        self.body.append(self.starttag(node, 'details', CLASS='explanation'))
+
+    def depart_explanation(self, node):
+        self.body.append('</details>\n')
 
     def visit_commentary(self, node):
         if 'orphan' in node:
@@ -257,7 +244,8 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
         close_tag = '</p>\n'
         if isinstance(node.parent, explanation):
             self.body.append(
-                  self.starttag(node, 'p', '', CLASS='explanation-title'))
+                  self.starttag(node, 'summary', ''))
+            close_tag = '</summary>\n'
         elif isinstance(node.parent, nodes.topic):
             self.body.append(
                   self.starttag(node, 'p', '', CLASS='topic-title'))

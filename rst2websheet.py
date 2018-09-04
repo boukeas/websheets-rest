@@ -20,7 +20,7 @@ public = docutils.core.publish_file(
                 'language_code': language_tag,
                 'embed_stylesheet': False,
                 'stylesheet_path': 'css/websheets.css, css/fonts.css',
-                'script_path': 'js/websheets.js',
+                # 'script_path': 'js/websheets.js',
                 'template': './template.txt',
                 'initial_header_level': 2,
                 'dump_settings': 0,
