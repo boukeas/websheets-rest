@@ -158,10 +158,28 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
         self.body.append('</section>\n')
 
     def visit_container(self, node):
+        # overriden because default container class is "docutils container"
         self.body.append(self.starttag(node, 'div', CLASS='container'))
 
     def depart_container(self, node):
         self.body.append('</div>\n')
+
+    def visit_admonition(self, node):
+        # this doesn't work, apparently, they are all admonitions
+        # if isinstance(node, nodes.hint):
+        if 'hint' in node['classes']:
+            self.body.append(
+                  self.starttag(node, 'details', ''))
+            close_tag = '</details>\n'
+        else:
+            # default behaviour
+            node['classes'].insert(0, 'admonition')
+            self.body.append(self.starttag(node, 'div'))
+            close_tag = '</div>\n'
+        self.context.append(close_tag)
+
+    def depart_admonition(self, node=None):
+        self.body.append(self.context.pop())
 
     def visit_group(self, node):
         self.body.append(self.starttag(node, 'div', CLASS='group'))
@@ -253,8 +271,13 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
             self.body.append(
                   self.starttag(node, 'p', '', CLASS='sidebar-title'))
         elif isinstance(node.parent, nodes.Admonition):
-            self.body.append(
-                  self.starttag(node, 'p', '', CLASS='admonition-title'))
+            if 'hint' in node.parent['classes']:
+                self.body.append(
+                      self.starttag(node, 'summary', ''))
+                close_tag = '</summary>\n'
+            else:
+                self.body.append(
+                    self.starttag(node, 'p', '', CLASS='admonition-title'))
         elif isinstance(node.parent, nodes.table):
             self.body.append(
                   self.starttag(node, 'caption', ''))
