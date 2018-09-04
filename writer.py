@@ -141,28 +141,7 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
 
         return ''.join(prefix) + '<%s>' % ' '.join(parts) + suffix
 
-    def visit_section(self, node):
-        self.section_level += 1
-        if self.section_level == 1:
-            self.body.append(
-                self.starttag(node, 'section', CLASS='unit'))
-        elif self.section_level == 2:
-            self.body.append(
-                self.starttag(node, 'section', CLASS='step'))
-        else: # this is where you can BAN deeper sections
-            self.body.append(
-                self.starttag(node, 'section'))
-
-    def depart_section(self, node):
-        self.section_level -= 1
-        self.body.append('</section>\n')
-
-    def visit_container(self, node):
-        # overriden because default container class is "docutils container"
-        self.body.append(self.starttag(node, 'div', CLASS='container'))
-
-    def depart_container(self, node):
-        self.body.append('</div>\n')
+    # visitor methods (for new types of nodes or overriding for existing ones)
 
     def visit_admonition(self, node):
         # this doesn't work, apparently, they are all admonitions
@@ -181,10 +160,23 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_admonition(self, node=None):
         self.body.append(self.context.pop())
 
-    def visit_group(self, node):
-        self.body.append(self.starttag(node, 'div', CLASS='group'))
+    def visit_commentary(self, node):
+        if 'orphan' in node:
+            self.body.append(self.starttag(node, 'div',
+                                           Class='commentary',
+                                           Orphan=None))
+        else:
+            self.body.append(self.starttag(node, 'div',
+                                           Class='commentary'))
 
-    def depart_group(self, node):
+    def depart_commentary(self, node):
+        self.body.append('</div>\n')
+
+    def visit_container(self, node):
+        # overriden because default container class is "docutils container"
+        self.body.append(self.starttag(node, 'div', CLASS='container'))
+
+    def depart_container(self, node):
         self.body.append('</div>\n')
 
     def visit_explanation(self, node):
@@ -199,29 +191,11 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_explanation(self, node):
         self.body.append('</details>\n')
 
-    def visit_commentary(self, node):
-        if 'orphan' in node:
-            self.body.append(self.starttag(node, 'div',
-                                           Class='commentary',
-                                           Orphan=None))
-        else:
-            self.body.append(self.starttag(node, 'div',
-                                           Class='commentary'))
+    def visit_group(self, node):
+        self.body.append(self.starttag(node, 'div', CLASS='group'))
 
-    def depart_commentary(self, node):
+    def depart_group(self, node):
         self.body.append('</div>\n')
-
-    def visit_transition(self, node):
-        self.body.append(self.emptytag(node, 'hr'))
-
-    def depart_transition(self, node):
-        pass
-
-    def visit_sidebar(self, node):
-        self.body.append(self.starttag(node, 'aside'))
-
-    def depart_sidebar(self, node):
-        self.body.append('</aside>\n')
 
     # inline literal
     def visit_literal(self, node):
@@ -253,6 +227,28 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_literal(self, node):
         # skipped unless literal element is from "code" role:
         self.body.append('</code>')
+
+    def visit_section(self, node):
+        self.section_level += 1
+        if self.section_level == 1:
+            self.body.append(
+                self.starttag(node, 'section', CLASS='unit'))
+        elif self.section_level == 2:
+            self.body.append(
+                self.starttag(node, 'section', CLASS='step'))
+        else: # this is where you can BAN deeper sections
+            self.body.append(
+                self.starttag(node, 'section'))
+
+    def depart_section(self, node):
+        self.section_level -= 1
+        self.body.append('</section>\n')
+
+    def visit_sidebar(self, node):
+        self.body.append(self.starttag(node, 'aside'))
+
+    def depart_sidebar(self, node):
+        self.body.append('</aside>\n')
 
     def visit_title(self, node):
         """Only 6 section levels are supported by HTML."""
@@ -312,3 +308,9 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
             self.body_pre_docinfo.extend(self.body)
             self.html_title.extend(self.body)
             del self.body[:]
+
+    def visit_transition(self, node):
+        self.body.append(self.emptytag(node, 'hr'))
+
+    def depart_transition(self, node):
+        pass
