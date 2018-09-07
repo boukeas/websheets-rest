@@ -8,11 +8,15 @@ document.addEventListener('readystatechange', function() {
 // high-level processing function: it is called when the readyState is reached
 // and it delegates processing to functions that handle specific tasks
 function process() {
-
-  addGroupButtons(document.querySelectorAll('div.explanation-group'),
-                  'explanation');
-
+    PR.prettyPrint();
 }
+
+
+
+/*
+
+// add this to function process()
+// addGroupButtons(document.querySelectorAll('div.explanation-group'), 'explanation');
 
 function addGroupButtons(groups, name) {
   for (let group of groups) {
@@ -37,13 +41,12 @@ function addGroupButtons(groups, name) {
         button.innerHTML = element.firstElementChild.innerHTML;
         element.firstElementChild.remove();
 
-        /*
-        if (element.classList.contains('active')) {
-            element.classList.remove('active');
-            buttonActivate(button);
-        }
-        button.counter = buttonCounters[buttonType];
-        */
+        // if (element.classList.contains('active')) {
+        //     element.classList.remove('active');
+        //    buttonActivate(button);
+        // }
+        // button.counter = buttonCounters[buttonType];
+
         // click event
         button.onclick = buttonToggle;
         element = element.nextElementSibling;
@@ -122,3 +125,4 @@ function buttonToggle() {
         activateButton(this);
     }
 }
+*/
