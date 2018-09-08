@@ -2,7 +2,7 @@
 import docutils.writers.html5_polyglot
 from docutils import nodes, frontend, io, utils
 # local imports
-from directives import explanation, hint
+from directives import explanation, hint, code
 
 # python2-compatible code in the html-translator uses this function
 def unicode(v):
@@ -169,6 +169,14 @@ class WebsheetHTMLTranslator(docutils.writers.html5_polyglot.HTMLTranslator):
     def depart_admonition(self, node=None):
         self.body.append('</div>\n')
         # self.body.append(self.context.pop())
+
+    def visit_code(self, node):
+        self.body.append(self.starttag(node, 'pre', '', CLASS='literal-block'))
+        self.body.append('<code>')
+
+    def depart_code(self, node):
+        self.body.append('</code>')
+        self.body.append('</pre>\n')
 
     def visit_commentary(self, node):
         if 'orphan' in node:
